@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.csv
+*.log
+*.sumo.cfg
+*.net.xml
+*.rou.xml
+*.add.xml
+*.poi.xml
