@@ -4,19 +4,31 @@ import sys
 import random
 import traci
 from sumolib import net as sumolib_net
-from sensing_model import estimate_snr, check_los, get_prepared_buildings, assign_building_heights
-from features import FeatureLogger
+# from sensing_model import estimate_snr, check_los, get_prepared_buildings, assign_building_heights
+from osmnet.sensing_model import estimate_snr, check_los, assign_building_heights
+from osmnet.buildings_loader import get_prepared_buildings
+from osmnet.features import FeatureLogger
 
 # ==== CONFIG ====
+import os
+
+ROOT = os.path.dirname(os.path.dirname(__file__))  # project root
+DATA_DIR = os.path.join(ROOT, "data")
 SUMO_HOME = r"C:\Program Files (x86)\Eclipse\Sumo"
 SUMO_BINARY = os.path.join(SUMO_HOME, "bin", "sumo-gui.exe")
-SUMO_CONFIG = "map.sumocfg"
-NET_FILE = "map.net.xml"
-POI_FILE = "map.poi.xml"
+NET_FILE = os.path.join(DATA_DIR, "map.net.xml")
+POI_FILE = os.path.join(DATA_DIR, "map.poi.xml")
+SUMO_CONFIG = os.path.join(DATA_DIR, "map.sumocfg")
 MAX_STEPS = 200
 NUM_VEHICLES = 5
 NUM_PEDESTRIANS = 5
 RANDOM_SEED = 42
+
+# output folder
+OUTPUTS_DIR = os.path.join(ROOT, "outputs")
+os.makedirs(OUTPUTS_DIR, exist_ok=True)
+ROLLOUT_FILE = os.path.join(OUTPUTS_DIR, "rollout.csv")
+
 
 # gNB locations
 GNBs = {
@@ -35,7 +47,8 @@ random.seed(RANDOM_SEED)
 # ==== Load network ====
 net = sumolib_net.readNet(NET_FILE)
 polys, _ = get_prepared_buildings(POI_FILE, net)
-BUILDINGS_3D = assign_building_heights(polys)  # persistent random heights
+# Prepare building heights once and reuse
+BUILDINGS_3D = assign_building_heights(polys)
 
 drive_edges = [e.getID() for e in net.getEdges() if e.allows("passenger")]
 walk_edges = [e.getID() for e in net.getEdges() if e.allows("pedestrian")]
@@ -113,7 +126,7 @@ def best_cell(ue_pos):
 def main():
     traci.start([SUMO_BINARY, "-c", SUMO_CONFIG])
     step = 0
-    feat = FeatureLogger("rollout.csv")
+    feat = FeatureLogger(ROLLOUT_FILE)
 
     # Spawn initial agents
     for i in range(NUM_VEHICLES):

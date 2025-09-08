@@ -1,6 +1,6 @@
 # sensing_model.py
 from shapely.geometry import LineString
-from buildings_loader import get_prepared_buildings
+# from osmnet.buildings_loader import get_prepared_buildings
 import math
 import random
 
